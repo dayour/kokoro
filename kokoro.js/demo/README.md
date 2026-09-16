@@ -32,6 +32,13 @@ natively; Oxlint supplies React correctness rules, with the official React Hooks
 and React Refresh ESLint plugins retained. This avoids the old TypeScript
 compiler API required by the TypeScript-ESLint-based React lint stack.
 
+`npm run typecheck` checks the existing JavaScript and JSX in strict mode using
+TypeScript 7 and JSDoc annotations, including the shared worker message contract.
+`npm run build` runs this check before bundling; run `npm run lint` separately.
+Synthesis errors are shown inline and allow retry, while model-loading or worker
+failures block generation and require a page reload. Workers and generated audio
+URLs are released on unmount, including React Strict Mode's development remount.
+
 This demo intentionally pins React/React DOM
 `19.3.0-canary-ff7445e6-20260831` and Vite `8.3.0-beta.1`. These are prereleases,
 not stable releases. The targeted npm overrides allow the exact root versions
