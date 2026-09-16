@@ -12,6 +12,14 @@ Kokoro is a frontier TTS model for its size of 82 million parameters (text in/au
 
 ## Usage
 
+Development requires Node.js 22.13+, 24.x, or 26+ (the supported Vitest runtimes).
+The library uses Transformers.js 4, TypeScript 7.0.2, Rollup 4, and Vitest 5.
+Its Vite dependency is explicitly overridden to `8.3.0-beta.1`, matching the
+demo's intentionally selected prerelease. See the demo README for React canary
+pins and the corresponding peer-dependency overrides.
+Run `npm ci`, `npm run build`, and `npm test` from this directory. The build scripts
+work on Windows as well as Unix systems.
+
 First, install the `kokoro-js` library from [NPM](https://npmjs.com/package/kokoro-js) using:
 
 ```bash

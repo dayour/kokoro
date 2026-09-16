@@ -110,6 +110,7 @@ export class TextSplitterStream {
   constructor() {
     this._buffer = "";
     this._sentences = [];
+    /** @type {(() => void) | null} */
     this._resolver = null;
     this._closed = false;
   }
@@ -304,7 +305,7 @@ export class TextSplitterStream {
         break;
       } else {
         // Wait for more text.
-        await new Promise((resolve) => {
+        await new Promise(/** @param {(value?: void) => void} resolve */ (resolve) => {
           this._resolver = resolve;
         });
       }
@@ -325,7 +326,6 @@ export class TextSplitterStream {
   /**
    * Returns the array of sentences currently available.
    * @type {string[]} The array of sentences.
-   * @readonly
    */
   get sentences() {
     return this._sentences;

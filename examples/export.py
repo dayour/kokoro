@@ -25,6 +25,7 @@ def export_onnx(model, output):
         input_names = [ 'input_ids', 'style', 'speed' ], 
         output_names = [ 'waveform', 'duration' ],
         opset_version = 17, 
+        dynamo = False,
         dynamic_axes = {
             'input_ids': {0: "batch_size", 1: 'input_ids_len' }, 
             'style': {0: "batch_size"}, 

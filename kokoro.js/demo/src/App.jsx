@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 
 export default function App() {
   // Create a reference to the worker object.
-  const worker = useRef(null);
+  const workerRef = useRef(null);
 
   const [inputText, setInputText] = useState("Life is like a box of chocolates. You never know what you're gonna get.");
   const [selectedSpeaker, setSelectedSpeaker] = useState("af_heart");
@@ -18,7 +18,7 @@ export default function App() {
   // We use the `useEffect` hook to setup the worker as soon as the `App` component is mounted.
   useEffect(() => {
     // Create the worker if it does not yet exist.
-    worker.current ??= new Worker(new URL("./worker.js", import.meta.url), {
+    workerRef.current ??= new Worker(new URL("./worker.js", import.meta.url), {
       type: "module",
     });
 
@@ -33,14 +33,15 @@ export default function App() {
           setVoices(e.data.voices);
           break;
         case "error":
-          setError(e.data.data);
+          setError(e.data.error);
           break;
-        case "complete":
+        case "complete": {
           const { audio, text } = e.data;
           // Generation complete: re-enable the "Generate" button
           setResults((prev) => [{ text, src: audio }, ...prev]);
           setStatus("ready");
           break;
+        }
       }
     };
 
@@ -50,13 +51,13 @@ export default function App() {
     };
 
     // Attach the callback function as an event listener.
-    worker.current.addEventListener("message", onMessageReceived);
-    worker.current.addEventListener("error", onErrorReceived);
+    workerRef.current.addEventListener("message", onMessageReceived);
+    workerRef.current.addEventListener("error", onErrorReceived);
 
     // Define a cleanup function for when the component is unmounted.
     return () => {
-      worker.current.removeEventListener("message", onMessageReceived);
-      worker.current.removeEventListener("error", onErrorReceived);
+      workerRef.current.removeEventListener("message", onMessageReceived);
+      workerRef.current.removeEventListener("error", onErrorReceived);
     };
   }, []);
 
@@ -64,7 +65,7 @@ export default function App() {
     e.preventDefault();
     setStatus("running");
 
-    worker.current.postMessage({
+    workerRef.current.postMessage({
       type: "generate",
       text: inputText.trim(),
       voice: selectedSpeaker,
@@ -72,7 +73,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-gradient-to-br from-gray-900 to-gray-700 flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="relative w-full min-h-screen bg-linear-to-br from-gray-900 to-gray-700 flex flex-col items-center justify-center p-4 overflow-hidden font-sans">
       <motion.div initial={{ opacity: 1 }} animate={{ opacity: status === null ? 1 : 0 }} transition={{ duration: 0.5 }} className="absolute w-screen h-screen justify-center flex flex-col items-center z-10 bg-gray-800/95 backdrop-blur-md" style={{ pointerEvents: status === null ? "auto" : "none" }}>
         <div className="w-[250px] h-[250px] border-4 border-white shadow-[0_0_0_5px_#4973ff] rounded-full overflow-hidden">
           <div className="loading-wave"></div>
@@ -105,7 +106,7 @@ export default function App() {
                   </option>
                 ))}
               </select>
-              <button type="submit" className="inline-flex justify-center items-center px-6 py-2 text-lg font-semibold bg-gradient-to-t from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-colors duration-300 rounded-xl text-white disabled:opacity-50" disabled={status === "running" || inputText.trim() === ""}>
+              <button type="submit" className="inline-flex justify-center items-center px-6 py-2 text-lg font-semibold bg-linear-to-t from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-colors duration-300 rounded-xl text-white disabled:opacity-50" disabled={status === "running" || inputText.trim() === ""}>
                 {status === "running" ? "Generating..." : "Generate"}
               </button>
             </div>
@@ -115,7 +116,7 @@ export default function App() {
         {results.length > 0 && (
           <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }} className="max-h-[250px] overflow-y-auto px-2 mt-4 space-y-6 relative z-[2]">
             {results.map((result, i) => (
-              <div key={i}>
+              <div key={result.src}>
                 <div className="text-white bg-gray-800/70 backdrop-blur-sm border border-gray-700 rounded-lg p-4 z-10">
                   <span className="absolute right-5 font-bold">#{results.length - i}</span>
                   <p className="mb-3 max-w-[95%]">{result.text}</p>

@@ -4,7 +4,9 @@ import gradio as gr
 import os
 import random
 import torch
+from pathlib import Path
 
+DATA_DIR = Path(__file__).resolve().parent
 CUDA_AVAILABLE = torch.cuda.is_available()
 models = {gpu: KModel().to('cuda' if gpu else 'cpu').eval() for gpu in [False] + ([True] if CUDA_AVAILABLE else [])}
 pipelines = {lang_code: KPipeline(lang_code=lang_code, model=False) for lang_code in 'ab'}
@@ -70,18 +72,18 @@ def generate_all(text, voice='af_heart', speed=1, use_gpu=CUDA_AVAILABLE):
             first = False
             yield 24000, torch.zeros(1).numpy()
 
-with open('en.txt', 'r') as r:
+with (DATA_DIR / 'en.txt').open(encoding='utf-8') as r:
     random_quotes = [line.strip() for line in r]
 
 def get_random_quote():
     return random.choice(random_quotes)
 
 def get_gatsby():
-    with open('gatsby5k.md', 'r') as r:
+    with (DATA_DIR / 'gatsby5k.md').open(encoding='utf-8') as r:
         return r.read().strip()
 
 def get_frankenstein():
-    with open('frankenstein5k.md', 'r') as r:
+    with (DATA_DIR / 'frankenstein5k.md').open(encoding='utf-8') as r:
         return r.read().strip()
 
 CHOICES = {
@@ -179,4 +181,7 @@ with gr.Blocks() as app:
     predict_btn.click(fn=predict, inputs=[text, voice, speed], outputs=[out_audio])
 
 if __name__ == '__main__':
-    app.queue(api_open=API_OPEN).launch(server_name="0.0.0.0", server_port=40001, show_api=API_OPEN)
+    app.queue(api_open=API_OPEN).launch(
+        server_name="0.0.0.0", server_port=40001,
+        footer_links=["api"] if API_OPEN else [],
+    )

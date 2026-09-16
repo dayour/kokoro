@@ -1,13 +1,78 @@
 # kokoro
 
-An inference library for [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M). You can [`pip install kokoro`](https://pypi.org/project/kokoro/).
+An inference library for [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M).
+
+### Python 3.14 installation
+
+This checkout supports **CPython 3.14 only** (`>=3.14,<3.15`). Older Python versions
+are no longer supported. It requires the matching, modified Misaki checkout at
+`..\misaki`, installed as `misaki==0.9.4+py314.1`. The published PyPI Misaki package
+does not yet support Python 3.14; an unmodified upstream checkout is not a substitute.
+
+Clone the matching forks next to each other:
+
+```powershell
+git clone https://github.com/dayour/misaki.git
+git clone https://github.com/dayour/kokoro.git
+cd kokoro
+```
+
+Then, from this repository:
+
+```powershell
+uv sync --locked --python 3.14
+uv run --no-sync kokoro --text "Hello world." --output-file hello.wav
+```
+
+Alternatively, install both local projects together into a Python 3.14 environment:
+
+```powershell
+python -m pip install "../misaki[en]" "."
+```
+
+Install optional demo and export dependencies with
+`uv sync --locked --group demo --group export`. Start the Gradio demo from the
+repository root with `uv run --no-sync python demo\app.py`.
+For Japanese or Chinese, add `--extra ja` or `--extra zh` to `uv sync`.
+Japanese's default backend also needs `uv run --no-sync python -m unidic download`.
+The JavaScript library and web demo have separate npm manifests and lockfiles.
+
+The lockfiles select the newest stable, compatible releases available from the
+package registry at upgrade time. Regenerate with `uv lock --upgrade` when newer
+releases are available. A registry mirror may lag PyPI; configure its index explicitly
+when resolving rather than disabling TLS verification.
+
+Windows PyPI builds of PyTorch 2.14 are CPU-only. CUDA-enabled PyTorch builds
+come from the official PyTorch CUDA 13.0 index and require substantially more
+disk space; this checkout does not replace the system NVIDIA driver. The sibling
+[ONNX fork](https://github.com/dayour/kokoro-onnx) provides a separate CUDA 13
+runtime installation through its `gpu` extra.
+
+### Development checks
+
+```powershell
+uv run --no-sync python -m pytest tests\test_python_compatibility.py tests\test_optional_dependencies.py
+uv run --no-sync python -m pytest tests\test_python_compatibility.py -m integration
+uv build
+```
+
+The integration check downloads official model weights, a voice, and the spaCy
+English model. Normal tests do not download these assets. The original
+`test_custom_stft.py` suite has two pre-existing failures: reconstruction amplitude
+and non-hop-aligned output length. Those numerical issues are unchanged by this upgrade.
+The ONNX example explicitly retains the legacy exporter because its dynamic axes
+and recurrent model are not a drop-in match for PyTorch's new default exporter.
+
+Build and distribute **both** projects' wheels together; Kokoro's wheel intentionally
+does not bundle Misaki or encode a machine-specific dependency path.
 
 > **Kokoro** is an open-weight TTS model with 82 million parameters. Despite its lightweight architecture, it delivers comparable quality to larger models while being significantly faster and more cost-efficient. With Apache-licensed weights, Kokoro can be deployed anywhere from production environments to personal projects.
 
 ### Usage
-You can run this basic cell on [Google Colab](https://colab.research.google.com/). [Listen to samples](https://huggingface.co/hexgrad/Kokoro-82M/blob/main/SAMPLES.md).
+After installing the local projects in a Python 3.14 notebook, install
+`soundfile>=0.14.0` and run the following. [Listen to samples](https://huggingface.co/hexgrad/Kokoro-82M/blob/main/SAMPLES.md).
 ```py
-!pip install -q kokoro>=0.9.4 soundfile
+!pip install -q "soundfile>=0.14.0"
 !apt-get -qq -y install espeak-ng > /dev/null 2>&1
 from kokoro import KPipeline
 from IPython.display import display, Audio
@@ -26,10 +91,10 @@ for i, (gs, ps, audio) in enumerate(generator):
 Under the hood, `kokoro` uses [`misaki`](https://pypi.org/project/misaki/), a G2P library at https://github.com/hexgrad/misaki
 
 ### Advanced Usage
-You can run this advanced cell on [Google Colab](https://colab.research.google.com/).
+Use a Python 3.14 notebook with the local Kokoro and Misaki projects installed.
 ```py
 # 1️⃣ Install kokoro
-!pip install -q kokoro>=0.9.4 soundfile
+!pip install -q "soundfile>=0.14.0"
 # 2️⃣ Install espeak, used for English OOD fallback and some non-English languages
 !apt-get -qq -y install espeak-ng > /dev/null 2>&1
 
@@ -110,12 +175,12 @@ name: kokoro
 channels:
   - defaults
 dependencies:
-  - python==3.9       
+  - python=3.14
   - libstdcxx~=12.4.0 # Needed to load espeak correctly. Try removing this if you're facing issues with Espeak fallback. 
   - pip:
-      - kokoro>=0.3.1
-      - soundfile
-      - misaki[en]
+      - "../misaki[en]"
+      - "."
+      - soundfile>=0.14.0
 ```
 
 ### Acknowledgements

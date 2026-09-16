@@ -11,7 +11,9 @@
     "default": "./dist/kokoro.js"
   },
   "scripts": {
-    "build": "rm -rf dist types && rollup -c && tsc && cp ../LICENSE LICENSE",
+    "prebuild": "node scripts/build-files.js clean",
+    "build": "rollup -c && tsc",
+    "postbuild": "node scripts/build-files.js license",
     "format": "prettier --write . --print-width 1000",
     "test": "vitest run"
   },
@@ -32,18 +34,24 @@
     "Xenova"
   ],
   "license": "Apache-2.0",
+  "engines": {
+    "node": "^22.13.0 || ^24.0.0 || >=26.0.0"
+  },
   "description": "High-quality text-to-speech for the web",
   "dependencies": {
-    "@huggingface/transformers": "^3.5.1",
+    "@huggingface/transformers": "^4.2.0",
     "phonemizer": "^1.2.1"
   },
+  "overrides": {
+    "vite": "8.3.0-beta.1"
+  },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^16.0.0",
-    "@rollup/plugin-terser": "^0.4.4",
-    "prettier": "3.4.2",
-    "rollup": "^4.30.1",
-    "typescript": "^5.7.3",
-    "vitest": "^3.1.2"
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "prettier": "3.9.6",
+    "rollup": "^4.63.1",
+    "typescript": "7.0.2",
+    "vitest": "^5.0.0"
   },
   "files": [
     "types",
@@ -52,10 +60,10 @@
     "README.md",
     "LICENSE"
   ],
-  "homepage": "https://github.com/hexgrad/kokoro",
+  "homepage": "https://github.com/dayour/kokoro",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hexgrad/kokoro.git"
+    "url": "git+https://github.com/dayour/kokoro.git"
   },
   "publishConfig": {
     "access": "public"

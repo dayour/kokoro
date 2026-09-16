@@ -1,3 +1,5 @@
-kokoro>=0.7.13
-gradio
-pip
+# Run from the repository root; the local Misaki fork is required on Python 3.14.
+../misaki[en]
+.
+gradio>=6.26.0,<7
+spaces>=0.51.3,<1

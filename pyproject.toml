@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.32.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -13,18 +13,46 @@ authors = [
 license = { file = "LICENSE" }
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent"
 ]
-requires-python = ">=3.10, <3.14"
+requires-python = ">=3.14, <3.15"
 dependencies = [
-    "huggingface_hub",
-    "loguru",
-    "misaki[en]>=0.9.4",
-    "numpy",
-    "torch",
-    "transformers"
+    "huggingface-hub>=1.30.0,<2",
+    "loguru>=0.7.3,<1",
+    "misaki[en]==0.9.4+py314.1",
+    "numpy>=2.5.3,<3",
+    "torch>=2.14.0,<3",
+    "transformers>=5.16.1,<6"
 ]
+
+[project.optional-dependencies]
+ja = ["misaki[ja]==0.9.4+py314.1"]
+zh = ["misaki[zh]==0.9.4+py314.1"]
+
+[dependency-groups]
+dev = ["pytest>=9.1.1,<10"]
+demo = ["gradio>=6.26.0,<7", "spaces>=0.51.3,<1"]
+export = [
+    "onnx>=1.22.0,<2",
+    "onnxruntime>=1.30.0,<2",
+    "onnx-graphsurgeon>=0.6.1,<1",
+    "sounddevice>=0.5.6,<1",
+    "soundfile>=0.14.0,<1",
+    "scipy>=1.18.1,<2",
+]
+
+[tool.uv.sources]
+misaki = { path = "../misaki", editable = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: downloads language models, voices, or model weights",
+]
+addopts = "-m 'not integration'"
 
 [project.scripts]
 kokoro = "kokoro.__main__:main"
@@ -33,6 +61,18 @@ kokoro = "kokoro.__main__:main"
 only-include = ["kokoro"]
 only-packages = true
 
+[tool.hatch.build.targets.sdist]
+include = [
+    "/kokoro",
+    "/tests",
+    "/examples",
+    "/demo",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/.python-version",
+]
+
 [project.urls]
-Homepage = "https://github.com/hexgrad/kokoro"
-Repository = "https://github.com/hexgrad/kokoro"
+Homepage = "https://github.com/dayour/kokoro"
+Repository = "https://github.com/dayour/kokoro"
