@@ -6,15 +6,26 @@ export default function App() {
   const busyRef = useRef(false);
   const audioUrls = useRef(/** @type {Set<string>} */ (new Set()));
 
-  const [inputText, setInputText] = useState("Life is like a box of chocolates. You never know what you're gonna get.");
-  const [selectedSpeaker, setSelectedSpeaker] = useState(/** @type {import("./messages.js").VoiceId} */ ("af_heart"));
+  const [inputText, setInputText] = useState(
+    "Life is like a box of chocolates. You never know what you're gonna get.",
+  );
+  const [selectedSpeaker, setSelectedSpeaker] = useState(
+    /** @type {import("./messages.js").VoiceId} */ ("af_heart"),
+  );
 
-  const [voices, setVoices] = useState(/** @type {import("./messages.js").Voices | null} */ (null));
-  const [status, setStatus] = useState(/** @type {import("./messages.js").Status} */ ("loading"));
+  const [voices, setVoices] = useState(
+    /** @type {import("./messages.js").Voices | null} */ (null),
+  );
+  const [status, setStatus] = useState(
+    /** @type {import("./messages.js").Status} */ ("loading"),
+  );
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [loadingMessage, setLoadingMessage] = useState("Loading...");
+  const [attempt, setAttempt] = useState(0);
 
-  const [results, setResults] = useState(/** @type {import("./messages.js").Result[]} */ ([]));
+  const [results, setResults] = useState(
+    /** @type {import("./messages.js").Result[]} */ ([]),
+  );
 
   // We use the `useEffect` hook to setup the worker as soon as the `App` component is mounted.
   useEffect(() => {
@@ -36,7 +47,7 @@ export default function App() {
           break;
         case "error":
           busyRef.current = false;
-          setError(e.data.fatal ? `${e.data.error} Reload the page to try again.` : e.data.error);
+          setError(e.data.error);
           setStatus(e.data.fatal ? "failed" : "ready");
           break;
         case "complete": {
@@ -55,27 +66,56 @@ export default function App() {
     const onErrorReceived = (e) => {
       console.error("Worker error:", e);
       busyRef.current = false;
-      setError(e.message || "The speech worker failed. Reload the page to try again.");
+      setError(e.message || "The speech worker failed.");
+      setStatus("failed");
+    };
+
+    const onMessageError = () => {
+      busyRef.current = false;
+      setError("A response from the speech worker could not be decoded.");
       setStatus("failed");
     };
 
     // Attach the callback function as an event listener.
     worker.addEventListener("message", onMessageReceived);
     worker.addEventListener("error", onErrorReceived);
+    worker.addEventListener("messageerror", onMessageError);
 
     // Define a cleanup function for when the component is unmounted.
     return () => {
       worker.removeEventListener("message", onMessageReceived);
       worker.removeEventListener("error", onErrorReceived);
+      worker.removeEventListener("messageerror", onMessageError);
       worker.terminate();
       workerRef.current = null;
       busyRef.current = false;
+    };
+  }, [attempt]);
+
+  useEffect(() => {
+    const urls = audioUrls.current;
+    return () => {
       for (const url of urls) {
         URL.revokeObjectURL(url);
       }
       urls.clear();
     };
   }, []);
+
+  const retryLoading = () => {
+    setError(null);
+    setLoadingMessage("Loading...");
+    setStatus("loading");
+    setAttempt((previous) => previous + 1);
+  };
+
+  const clearResults = () => {
+    for (const url of audioUrls.current) {
+      URL.revokeObjectURL(url);
+    }
+    audioUrls.current.clear();
+    setResults([]);
+  };
 
   /** @param {import("react").SubmitEvent<HTMLFormElement>} e */
   const handleSubmit = (e) => {
@@ -103,26 +143,68 @@ export default function App() {
 
   return (
     <div className="relative w-full min-h-screen bg-linear-to-br from-gray-900 to-gray-700 flex flex-col items-center justify-center p-4 overflow-hidden font-sans">
-      <motion.div initial={{ opacity: 1 }} animate={{ opacity: status === "loading" || status === "failed" ? 1 : 0 }} transition={{ duration: 0.5 }} className="absolute w-screen h-screen justify-center flex flex-col items-center z-10 bg-gray-800/95 backdrop-blur-md" style={{ pointerEvents: status === "loading" || status === "failed" ? "auto" : "none" }} aria-hidden={status !== "loading" && status !== "failed"}>
+      <motion.div
+        initial={{ opacity: 1 }}
+        animate={{
+          opacity: status === "loading" || status === "failed" ? 1 : 0,
+        }}
+        transition={{ duration: 0.5 }}
+        className="absolute w-screen h-screen justify-center flex flex-col items-center z-10 bg-gray-800/95 backdrop-blur-md"
+        style={{
+          pointerEvents:
+            status === "loading" || status === "failed" ? "auto" : "none",
+        }}
+        aria-hidden={status !== "loading" && status !== "failed"}
+      >
         <div className="w-[250px] h-[250px] border-4 border-white shadow-[0_0_0_5px_#4973ff] rounded-full overflow-hidden">
           <div className="loading-wave"></div>
         </div>
-        <p role={error ? "alert" : "status"} className={`text-3xl my-5 text-center ${error ? "text-red-500" : "text-white"}`}>
+        <p
+          role={error ? "alert" : "status"}
+          className={`text-3xl my-5 text-center ${error ? "text-red-500" : "text-white"}`}
+        >
           {error ?? loadingMessage}
         </p>
+        {status === "failed" && (
+          <button
+            type="button"
+            onClick={retryLoading}
+            className="text-white underline"
+          >
+            Retry loading
+          </button>
+        )}
       </motion.div>
 
       <div className="max-w-3xl w-full space-y-8 relative z-[2]">
         <div className="text-center">
-          <h1 className="text-5xl font-extrabold text-gray-100 mb-2 drop-shadow-lg font-heading">Kokoro Text-to-Speech</h1>
+          <h1 className="text-5xl font-extrabold text-gray-100 mb-2 drop-shadow-lg font-heading">
+            Kokoro Text-to-Speech
+          </h1>
           <p className="text-2xl text-gray-300 font-semibold font-subheading">
             Powered by&nbsp;
-            <a href="https://github.com/hexgrad/kokoro" target="_blank" rel="noreferrer" className="underline">
+            <a
+              href="https://github.com/hexgrad/kokoro"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
               Kokoro
             </a>
             &nbsp;and&nbsp;
-            <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noreferrer" className="underline">
-              <img width="40" src="hf-logo.svg" alt="" className="inline translate-y-[-2px] me-1"></img>Transformers.js
+            <a
+              href="https://huggingface.co/docs/transformers.js"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              <img
+                width="40"
+                src="hf-logo.svg"
+                alt=""
+                className="inline translate-y-[-2px] me-1"
+              ></img>
+              Transformers.js
             </a>
           </p>
         </div>
@@ -133,7 +215,14 @@ export default function App() {
                 {error}
               </p>
             )}
-            <textarea aria-label="Text to speak" placeholder="Enter text..." value={inputText} onChange={(e) => setInputText(e.target.value)} className="w-full min-h-[100px] max-h-[300px] bg-gray-700/50 backdrop-blur-sm border-2 border-gray-600 rounded-xl resize-y text-gray-100 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows={Math.min(8, inputText.split("\n").length)} />
+            <textarea
+              aria-label="Text to speak"
+              placeholder="Enter text..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              className="w-full min-h-[100px] max-h-[300px] bg-gray-700/50 backdrop-blur-sm border-2 border-gray-600 rounded-xl resize-y text-gray-100 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={Math.min(8, inputText.split("\n").length)}
+            />
             <div className="flex flex-col items-center space-y-4">
               <select
                 aria-label="Voice"
@@ -141,18 +230,26 @@ export default function App() {
                 onChange={(e) => {
                   const voice = e.target.value;
                   if (voices && Object.hasOwn(voices, voice)) {
-                    setSelectedSpeaker(/** @type {import("./messages.js").VoiceId} */ (voice));
+                    setSelectedSpeaker(
+                      /** @type {import("./messages.js").VoiceId} */ (voice),
+                    );
                   }
                 }}
                 className="w-full bg-gray-700/50 backdrop-blur-sm border-2 border-gray-600 rounded-xl text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {(voices ? Object.entries(voices) : []).map(([id, voice]) => (
                   <option key={id} value={id}>
-                    {voice.name} ({voice.language === "en-us" ? "American" : "British"} {voice.gender})
+                    {voice.name} (
+                    {voice.language === "en-us" ? "American" : "British"}{" "}
+                    {voice.gender})
                   </option>
                 ))}
               </select>
-              <button type="submit" className="inline-flex justify-center items-center px-6 py-2 text-lg font-semibold bg-linear-to-t from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-colors duration-300 rounded-xl text-white disabled:opacity-50" disabled={status !== "ready" || inputText.trim() === ""}>
+              <button
+                type="submit"
+                className="inline-flex justify-center items-center px-6 py-2 text-lg font-semibold bg-linear-to-t from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-colors duration-300 rounded-xl text-white disabled:opacity-50"
+                disabled={status !== "ready" || inputText.trim() === ""}
+              >
                 {status === "running" ? "Generating..." : "Generate"}
               </button>
             </div>
@@ -160,11 +257,25 @@ export default function App() {
         </div>
 
         {results.length > 0 && (
-          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }} className="max-h-[250px] overflow-y-auto px-2 mt-4 space-y-6 relative z-[2]">
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="max-h-[250px] overflow-y-auto px-2 mt-4 space-y-6 relative z-[2]"
+          >
+            <button
+              type="button"
+              onClick={clearResults}
+              className="text-white underline"
+            >
+              Clear results
+            </button>
             {results.map((result, i) => (
               <div key={result.src}>
                 <div className="text-white bg-gray-800/70 backdrop-blur-sm border border-gray-700 rounded-lg p-4 z-10">
-                  <span className="absolute right-5 font-bold">#{results.length - i}</span>
+                  <span className="absolute right-5 font-bold">
+                    #{results.length - i}
+                  </span>
                   <p className="mb-3 max-w-[95%]">{result.text}</p>
                   <audio controls src={result.src} className="w-full">
                     Your browser does not support the audio element.

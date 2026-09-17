@@ -1,0 +1,28 @@
+name: JavaScript
+on:
+  push:
+    branches: [main]
+    paths: ["kokoro.js/**", ".github/workflows/javascript.yml"]
+  pull_request:
+    paths: ["kokoro.js/**", ".github/workflows/javascript.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "26"
+          cache: npm
+          cache-dependency-path: |
+            kokoro.js/package-lock.json
+            kokoro.js/demo/package-lock.json
+      - name: Build and test the library and worker
+        working-directory: kokoro.js
+        run: npm ci && npm run build && npm test
+      - name: Check and build the demo
+        working-directory: kokoro.js/demo
+        run: npm ci && npm run lint && npm run build

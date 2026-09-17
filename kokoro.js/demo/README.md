@@ -34,10 +34,14 @@ compiler API required by the TypeScript-ESLint-based React lint stack.
 
 `npm run typecheck` checks the existing JavaScript and JSX in strict mode using
 TypeScript 7 and JSDoc annotations, including the shared worker message contract.
+The page and worker are checked separately against DOM and WebWorker globals.
 `npm run build` runs this check before bundling; run `npm run lint` separately.
 Synthesis errors are shown inline and allow retry, while model-loading or worker
-failures block generation and require a page reload. Workers and generated audio
-URLs are released on unmount, including React Strict Mode's development remount.
+failures block generation and expose a retry button. Retrying replaces the worker
+without invalidating previously generated audio. Clear results releases audio
+URLs immediately; unmount also releases URLs and terminates workers, including
+React Strict Mode's development remount. Worker regression tests run with
+`npm test` in the parent `kokoro.js` directory.
 
 This demo intentionally pins React/React DOM
 `19.3.0-canary-ff7445e6-20260831` and Vite `8.3.0-beta.1`. These are prereleases,
