@@ -1,5 +1,8 @@
 # kokoro
 
+[Complete speech-stack wiki](https://dayour.github.io/kokoro-onnx/kokoro/overview/) |
+[Fork releases](https://github.com/dayour/kokoro/releases)
+
 An inference library for [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M).
 
 ### Python 3.14 installation

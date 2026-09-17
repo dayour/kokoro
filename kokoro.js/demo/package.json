@@ -16,19 +16,14 @@
   "dependencies": {
     "kokoro-js": "file:..",
     "motion": "^13.2.0",
-    "react": "19.3.0-canary-ff7445e6-20260831",
-    "react-dom": "19.3.0-canary-ff7445e6-20260831"
-  },
-  "overrides": {
-    "react": "$react",
-    "react-dom": "$react-dom",
-    "vite": "$vite"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "@webgpu/types": "^0.1.72",
     "eslint": "^10.10.0",
@@ -38,6 +33,6 @@
     "oxlint": "^1.82.0",
     "tailwindcss": "^4.3.3",
     "typescript": "7.0.2",
-    "vite": "8.3.0-beta.1"
+    "vite": "8.3.0"
   }
 }

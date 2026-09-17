@@ -43,7 +43,7 @@
     "phonemizer": "^1.2.1"
   },
   "overrides": {
-    "vite": "8.3.0-beta.1"
+    "vite": "8.3.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.3",

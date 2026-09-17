@@ -43,12 +43,10 @@ URLs immediately; unmount also releases URLs and terminates workers, including
 React Strict Mode's development remount. Worker regression tests run with
 `npm test` in the parent `kokoro.js` directory.
 
-This demo intentionally pins React/React DOM
-`19.3.0-canary-ff7445e6-20260831` and Vite `8.3.0-beta.1`. These are prereleases,
-not stable releases. The targeted npm overrides allow the exact root versions
-through integrations whose stable peer ranges exclude prereleases; they do not
-disable peer-dependency validation globally. Recheck lint, production builds,
-animations, and browser speech synthesis whenever these pins change.
+This demo pins stable React/React DOM `19.3.0` and Vite `8.3.0`.
+The earlier canary/beta pins and demo peer overrides have been removed.
+Recheck lint, production builds, animations, and browser speech synthesis
+whenever these pins change.
 
 Follow the steps below to set up and run the application.
 
