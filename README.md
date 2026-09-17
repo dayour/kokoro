@@ -42,6 +42,10 @@ package registry at upgrade time. Regenerate with `uv lock --upgrade` when newer
 releases are available. A registry mirror may lag PyPI; configure its index explicitly
 when resolving rather than disabling TLS verification.
 
+When updating an existing paired checkout from `phonemizer-fork`, include
+`--reinstall-package phonemizer` in `uv sync`. Misaki and Kokoro ONNX now use the
+same upstream phonemizer package, preventing overlapping module installations.
+
 Windows PyPI builds of PyTorch 2.14 are CPU-only. CUDA-enabled PyTorch builds
 come from the official PyTorch CUDA 13.0 index and require substantially more
 disk space; this checkout does not replace the system NVIDIA driver. The sibling
